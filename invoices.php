@@ -26,14 +26,14 @@ if (isset($_POST['auth'])){
         $csv_sep = ",";
         $csv_file = "factures.csv";
         $csv='Code_journal,Date_de_piece,Numero_de_piece,Copmte_Comptable,Libelle,Debit,Credit|';
-        /*echo '<!DOCTYPE html>
+        echo '<!DOCTYPE html>
                   <html lang="en">
                      <head>
                       <meta charset="UTF-8">
                       <title>Factures</title>
                      </head>
                      <body>
-                          <table>
+                          <table border="2px">
                               <thead>
                                   <tr>
                                       <td>Code journal</td>
@@ -45,18 +45,23 @@ if (isset($_POST['auth'])){
                                       <td>Credit</td>
                                   </tr>
                               </thead>
-                          </table>';*/
+                          <tbody>';
         foreach ($invoices as $id_invoice){
             $urlInvoice='https://invoice.zoho.eu/api/v3/invoices/'.$id_invoice.'?authtoken='.$_POST['auth'].'&organization_id='.$_POST['ido'];
             $headersInvoice = array('Accept' => 'application/json');
             $requestInvoice = Requests::get($urlInvoice, $headersInvoice/*, $options*/);
             $dataInvoice=json_decode($requestInvoice->body);
             $invoice=$dataInvoice->invoice;
-            var_dump($invoice);
-            var_dump($invoice->taxes);
+            echo'<tr><td>VT</td><td>'.$invoice->created_time.'</td><td>'.$invoice->reference_number.'</td><td>402</td><td>'.$invoice->customer_name.'</td><td>'.$invoice->total.'</td><td>  </td></tr>';
+            echo'<tr><td>VT</td><td>'.$invoice->created_time.'</td><td>'.$invoice->reference_number.'</td><td>402</td><td>'.$invoice->customer_name.'</td><td>  </td><td>'.$invoice->sub_total.'</td></tr>';
+            if($invoice->taxes[0]->tax_amount>0){
+                echo'<tr><td>VT</td><td>'.$invoice->created_time.'</td><td>'.$invoice->reference_number.'</td><td>402</td><td>'.$invoice->customer_name.'</td><td>  </td><td>'.$invoice->taxes[0]->tax_amount.'</td></tr>';
+            }
+            if($invoice->shipping_charge>0){
+                echo'<tr><td>VT</td><td>'.$invoice->created_time.'</td><td>'.$invoice->reference_number.'</td><td>402</td><td>'.$invoice->customer_name.'</td><td>  </td><td>'.$invoice->shipping_charge.'</td></tr>';
+            }
         }
-       /* echo '</body>
-                  </html>';*/
+       echo '</tbody></table></body></html>';
 
     }else{
         echo 'error';
