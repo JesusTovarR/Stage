@@ -25,7 +25,7 @@ if (isset($_POST['auth'])){
         $csv_end = "|";
         $csv_sep = ",";
         $csv_file = "factures.csv";
-        $csv='Code_journal,Date_de_piece,Numero_de_piece,Copmte_Comptable,Libelle,Debit,Credit|';
+        $csv="Code_journal,Date_de_piece,Numero_de_piece,Copmte_Comptable,Libelle,Debit,Credit\r\n";
         echo '<!DOCTYPE html>
                   <html lang="en">
                      <head>
@@ -52,17 +52,34 @@ if (isset($_POST['auth'])){
             $requestInvoice = Requests::get($urlInvoice, $headersInvoice/*, $options*/);
             $dataInvoice=json_decode($requestInvoice->body);
             $invoice=$dataInvoice->invoice;
+            $tax=0;
+            foreach($invoice->taxes as $val){
+                    $tax=$val->tax_amount;
+            }
             echo'<tr><td>VT</td><td>'.$invoice->created_time.'</td><td>'.$invoice->reference_number.'</td><td>402</td><td>'.$invoice->customer_name.'</td><td>'.$invoice->total.'</td><td>  </td></tr>';
+            $csv=$csv."VT,".$invoice->created_time.",".$invoice->reference_number.",402,".$invoice->customer_name.",".$invoice->total.",  \r\n";
             echo'<tr><td>VT</td><td>'.$invoice->created_time.'</td><td>'.$invoice->reference_number.'</td><td>402</td><td>'.$invoice->customer_name.'</td><td>  </td><td>'.$invoice->sub_total.'</td></tr>';
-            if($invoice->taxes[0]->tax_amount>0){
-                echo'<tr><td>VT</td><td>'.$invoice->created_time.'</td><td>'.$invoice->reference_number.'</td><td>402</td><td>'.$invoice->customer_name.'</td><td>  </td><td>'.$invoice->taxes[0]->tax_amount.'</td></tr>';
+            $csv=$csv."VT,".$invoice->created_time.",".$invoice->reference_number.",402,".$invoice->customer_name.", ,".$invoice->sub_total."\r\n";
+            if(!is_null($tax)){
+                echo'<tr><td>VT</td><td>'.$invoice->created_time.'</td><td>'.$invoice->reference_number.'</td><td>402</td><td>'.$invoice->customer_name.'</td><td>  </td><td>'.$tax.'</td></tr>';
+                $csv=$csv."VT,".$invoice->created_time.",".$invoice->reference_number.",402,".$invoice->customer_name.", ,".$tax."\r\n";
             }
             if($invoice->shipping_charge>0){
                 echo'<tr><td>VT</td><td>'.$invoice->created_time.'</td><td>'.$invoice->reference_number.'</td><td>402</td><td>'.$invoice->customer_name.'</td><td>  </td><td>'.$invoice->shipping_charge.'</td></tr>';
+                $csv=$csv."VT,".$invoice->created_time.",".$invoice->reference_number.",402,".$invoice->customer_name.", ,".$invoice->shipping_charge." \r\n";
             }
         }
        echo '</tbody></table></body></html>';
-
+        //Generamos el csv de todos los datos
+        if (!$handle = fopen($csv_file, "w")) {
+            echo "Cannot open file";
+            exit;
+        }
+        if (fwrite($handle, utf8_decode($csv)) === FALSE) {
+            echo "Cannot write to file";
+            exit;
+        }
+        fclose($handle);
     }else{
         echo 'error';
     }
